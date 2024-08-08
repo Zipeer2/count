@@ -2,8 +2,9 @@ package count_test
 
 import (
 	"bytes"
-	"count"
 	"testing"
+
+	"github.com/Zipeer2/count"
 )
 
 func TestLinesCountLinesInInput(t *testing.T) {
