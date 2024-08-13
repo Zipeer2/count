@@ -2,49 +2,73 @@ package count
 
 import (
 	"bufio"
+	"errors"
+	"fmt"
 	"io"
 	"os"
 )
 
-type Counter struct {
-	Input  io.Reader
-	Output io.Writer
+type counter struct {
+	input  io.Reader
+	output io.Writer
 }
 
-type Option func(*Counter)
+type option func(*counter) error
 
-func NewCounter(opts ...Option) *Counter {
-	c := &Counter{
-		Input:  os.Stdin,
-		Output: os.Stdout,
+func NewCounter(opts ...option) (*counter, error) {
+	c := &counter{
+		input:  os.Stdin,
+		output: os.Stdout,
 	}
 	for _, opt := range opts {
-		opt(c)
+		err := opt(c)
+		if err != nil {
+			return nil, err
+		}
 	}
-	return c
+	return c, nil
 }
 
-func (c *Counter) Lines() int {
+func (c *counter) Lines() int {
 	lines := 0
-	input := bufio.NewScanner(c.Input)
+	input := bufio.NewScanner(c.input)
 	for input.Scan() {
 		lines++
 	}
 	return lines
 }
 
-func WithInput(input io.Reader) Option {
-	return func(c *Counter) {
-		c.Input = input
+func WithInput(input io.Reader) option {
+	return func(c *counter) error {
+		if input == nil {
+			return errors.New("nil input reader")
+		}
+		c.input = input
+		return nil
 	}
 }
 
-func WithOutput(output io.Writer) Option {
-	return func(c *Counter) {
-		c.Output = output
+func WithOutput(output io.Writer) option {
+	return func(c *counter) error {
+		if output == nil {
+			return errors.New("nil output writer")
+		}
+		c.output = output
+		return nil
 	}
 }
 
 func Main() {
+	c, err := NewCounter()
+	if err != nil {
+		panic(err)
+	}
 
+	fmt.Println("Введите текст (нажмите Ctrl+D или Ctrl+Z, чтобы закончить ввод):")
+
+	// Считываем количество строк из ввода
+	lineCount := c.Lines()
+
+	// Выводим количество строк
+	fmt.Printf("Количество строк: %d\n", lineCount)
 }
