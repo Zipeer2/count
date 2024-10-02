@@ -9,17 +9,18 @@ import (
 )
 
 type counter struct {
-	input  io.Reader
-	output io.Writer
+	Input  io.Reader
+	Output io.Writer
 }
 
 type option func(*counter) error
 
 func NewCounter(opts ...option) (*counter, error) {
 	c := &counter{
-		input:  os.Stdin,
-		output: os.Stdout,
+		Input:  os.Stdin,
+		Output: os.Stdout,
 	}
+
 	for _, opt := range opts {
 		err := opt(c)
 		if err != nil {
@@ -31,11 +32,15 @@ func NewCounter(opts ...option) (*counter, error) {
 
 func (c *counter) Lines() int {
 	lines := 0
-	input := bufio.NewScanner(c.input)
+	input := bufio.NewScanner(c.Input)
 	for input.Scan() {
 		lines++
 	}
 	return lines
+}
+
+func (c *counter) PrintLines() {
+	fmt.Fprintln(c.Output, c.Lines())
 }
 
 func WithInput(input io.Reader) option {
@@ -43,7 +48,7 @@ func WithInput(input io.Reader) option {
 		if input == nil {
 			return errors.New("nil input reader")
 		}
-		c.input = input
+		c.Input = input
 		return nil
 	}
 }
@@ -53,7 +58,7 @@ func WithOutput(output io.Writer) option {
 		if output == nil {
 			return errors.New("nil output writer")
 		}
-		c.output = output
+		c.Output = output
 		return nil
 	}
 }
@@ -63,12 +68,5 @@ func Main() {
 	if err != nil {
 		panic(err)
 	}
-
-	fmt.Println("Введите текст (нажмите Ctrl+D или Ctrl+Z, чтобы закончить ввод):")
-
-	// Считываем количество строк из ввода
-	lineCount := c.Lines()
-
-	// Выводим количество строк
-	fmt.Printf("Количество строк: %d\n", lineCount)
+	fmt.Println(c.Lines())
 }
